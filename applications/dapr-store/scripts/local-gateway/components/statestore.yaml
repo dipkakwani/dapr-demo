@@ -1,0 +1,13 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.weakisolationmockdb
+  metadata:
+  - name: host
+    value: localhost:6399/v1.0/state
+  - name: storeName
+    value: mydb
+  # - name: actorStateStore
+  #   value: "true"

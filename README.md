@@ -65,8 +65,8 @@ https://github.com/benc-uk/dapr-store
 
 1000 iterations
 
-| Assertion\Store | MonkeyDB | Redis |
-| --------------- | -------- | ----- |
-| Reappear Item   | 21       | xxx   |
-| Extra Order     |          |       |
+| Assertion\Store | **WeakIsolationMockDB** | Redis |
+| --------------- | ----------------------- | ----- |
+| Reappear Item   | 21                      | xxx   |
+| Extra Order     |                         |       |
 

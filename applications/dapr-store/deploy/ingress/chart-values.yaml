@@ -1,0 +1,13 @@
+# helm install api-gateway stable/nginx-ingress -f ./deploy/ingress/chart-values.yaml
+controller:
+  service:
+    labels:
+      purpose: "daprstore-api-gateway"
+  ingressClass: "dapr"
+  podAnnotations:
+    dapr.io/enabled: "true"
+    dapr.io/id: "api-gateway"
+    dapr.io/port: "80"
+  scope:
+    enabled: true
+  #   namespace: "daprstore-prod"

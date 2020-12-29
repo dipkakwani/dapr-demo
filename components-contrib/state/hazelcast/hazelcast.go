@@ -1,0 +1,133 @@
+package hazelcast
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/dapr/components-contrib/state"
+	"github.com/dapr/dapr/pkg/logger"
+	"github.com/hazelcast/hazelcast-go-client"
+	"github.com/hazelcast/hazelcast-go-client/core"
+	jsoniter "github.com/json-iterator/go"
+)
+
+const (
+	hazelcastServers = "hazelcastServers"
+	hazelcastMap     = "hazelcastMap"
+)
+
+// Hazelcast state store
+type Hazelcast struct {
+	state.DefaultBulkStore
+	hzMap  core.Map
+	json   jsoniter.API
+	logger logger.Logger
+}
+
+// NewHazelcastStore returns a new hazelcast backed state store
+func NewHazelcastStore(logger logger.Logger) *Hazelcast {
+	s := &Hazelcast{
+		json:   jsoniter.ConfigFastest,
+		logger: logger,
+	}
+	s.DefaultBulkStore = state.NewDefaultBulkStore(s)
+
+	return s
+}
+
+func validateMetadata(metadata state.Metadata) error {
+	if metadata.Properties[hazelcastServers] == "" {
+		return errors.New("hazelcast error: missing hazelcast servers")
+	}
+	if metadata.Properties[hazelcastMap] == "" {
+		return errors.New("hazelcast error: missing hazelcast map name")
+	}
+
+	return nil
+}
+
+// Init does metadata and connection parsing
+func (store *Hazelcast) Init(metadata state.Metadata) error {
+	err := validateMetadata(metadata)
+	if err != nil {
+		return err
+	}
+	servers := metadata.Properties[hazelcastServers]
+
+	hzConfig := hazelcast.NewConfig()
+	hzConfig.NetworkConfig().AddAddress(strings.Split(servers, ",")...)
+
+	client, err := hazelcast.NewClientWithConfig(hzConfig)
+	if err != nil {
+		return fmt.Errorf("hazelcast error: %v", err)
+	}
+	store.hzMap, err = client.GetMap(metadata.Properties[hazelcastMap])
+
+	if err != nil {
+		return fmt.Errorf("hazelcast error: %v", err)
+	}
+
+	return nil
+}
+
+// Set stores value for a key to Hazelcast
+func (store *Hazelcast) Set(req *state.SetRequest) error {
+	err := state.CheckRequestOptions(req)
+	if err != nil {
+		return err
+	}
+
+	var value string
+	b, ok := req.Value.([]byte)
+	if ok {
+		value = string(b)
+	} else {
+		value, err = store.json.MarshalToString(req.Value)
+		if err != nil {
+			return fmt.Errorf("hazelcast error: failed to set key %s: %s", req.Key, err)
+		}
+	}
+	_, err = store.hzMap.Put(req.Key, value)
+
+	if err != nil {
+		return fmt.Errorf("hazelcast error: failed to set key %s: %s", req.Key, err)
+	}
+
+	return nil
+}
+
+// Get retrieves state from Hazelcast with a key
+func (store *Hazelcast) Get(req *state.GetRequest) (*state.GetResponse, error) {
+	resp, err := store.hzMap.Get(req.Key)
+	if err != nil {
+		return nil, fmt.Errorf("hazelcast error: failed to get value for %s: %s", req.Key, err)
+	}
+
+	// HZ Get API returns nil response if key does not exist in the map
+	if resp == nil {
+		return &state.GetResponse{}, nil
+	}
+	value, err := store.json.Marshal(&resp)
+	if err != nil {
+		return nil, fmt.Errorf("hazelcast error: %v", err)
+	}
+
+	return &state.GetResponse{
+		Data: value,
+	}, nil
+}
+
+// Delete performs a delete operation
+func (store *Hazelcast) Delete(req *state.DeleteRequest) error {
+	err := state.CheckRequestOptions(req.Options)
+	if err != nil {
+		return err
+	}
+	err = store.hzMap.Delete(req.Key)
+	if err != nil {
+		return fmt.Errorf("hazelcast error: failed to delete key - %s", req.Key)
+	}
+
+	return nil
+}

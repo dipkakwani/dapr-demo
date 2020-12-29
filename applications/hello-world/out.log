@@ -1,0 +1,85 @@
+ℹ️  Starting Dapr with id pythonapp. HTTP Port: 43931. gRPC Port: 32939
+ℹ️  Checking if Dapr sidecar is listening on HTTP port 43931
+== DAPR == time="2020-12-28T11:29:29.792253866+05:30" level=info msg="starting Dapr Runtime -- version edge -- commit v0.11.0-229-g1008f17-dirty" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.792296885+05:30" level=info msg="log level set to: info" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.792466055+05:30" level=info msg="metrics server started on :33323/" app_id=pythonapp instance=dip-thinkpad scope=dapr.metrics type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.793064912+05:30" level=info msg="standalone mode configured" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.793083842+05:30" level=info msg="app id: pythonapp" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.793259063+05:30" level=info msg="mTLS is disabled. Skipping certificate request and tls validation" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.79391772+05:30" level=info msg="local service entry announced: pythonapp -> 192.168.0.43:35211" app_id=pythonapp instance=dip-thinkpad scope=dapr.contrib type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.79398344+05:30" level=info msg="Initialized name resolution to standalone" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.797216687+05:30" level=info msg="component loaded. name: pubsub, type: pubsub.redis" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811482799+05:30" level=warning msg="either no actor state store or multiple actor state stores are specified in the configuration, actor stores specified: 0" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811542209+05:30" level=info msg="component loaded. name: statestore, type: state.cassandra" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.81157862+05:30" level=info msg="waiting for all outstanding components to be processed" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811697492+05:30" level=info msg="component loaded. name: zipkin, type: exporters.zipkin" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811724995+05:30" level=info msg="all outstanding components processed" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811858664+05:30" level=info msg="enabled gRPC tracing middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.grpc.api type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.811879444+05:30" level=info msg="enabled gRPC metrics middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.grpc.api type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.81192697+05:30" level=info msg="API gRPC server is running on port 32939" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812110742+05:30" level=info msg="enabled metrics http middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.http type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812128371+05:30" level=info msg="enabled tracing http middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.http type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812148356+05:30" level=info msg="http server is running on port 43931" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812246675+05:30" level=info msg="enabled gRPC tracing middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.grpc.internal type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812270759+05:30" level=info msg="enabled gRPC metrics middleware" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.grpc.internal type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812300692+05:30" level=info msg="internal gRPC server is running on port 35211" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812420106+05:30" level=warning msg="actors: state store must be present to initialize the actor runtime" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime.actor type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812453778+05:30" level=warning msg="failed to init actors: state store does not support transactions which actors require to save state - please see https://docs.dapr.io/operations/components/setup-state-store/supported-state-stores/" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812478581+05:30" level=warning msg="failed to read from bindings: app channel not initialized " app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+== DAPR == time="2020-12-28T11:29:29.812490797+05:30" level=info msg="dapr initialized. Status: Running. Init Elapsed 19.425405ms" app_id=pythonapp instance=dip-thinkpad scope=dapr.runtime type=log ver=edge
+
+ℹ️  Checking if Dapr sidecar is listening on GRPC port 32939
+ℹ️  Dapr sidecar is up and running.
+ℹ️  Updating metadata for app command: python3 app.py
+✅  You're up and running! Both Dapr and your app logs will appear here.
+
+ℹ️  
+terminated signal received: shutting down
+== APP == Sending order
+
+== APP == 1
+
+== APP == Sending order
+
+== APP == 2
+
+== APP == Sending order
+
+== APP == 3
+
+== APP == Sending order
+
+== APP == 4
+
+== APP == Sending order
+
+✅  Exited Dapr successfully
+✅  Exited App successfully
+== APP == 5
+

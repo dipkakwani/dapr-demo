@@ -1,0 +1,24 @@
+replicaCount: 1
+logLevel: info
+
+image:
+  name: dapr
+
+nameOverride: ""
+fullnameOverride: ""
+
+ports:
+  protocol: TCP
+  apiPort: 50005
+  raftRPCPort: 8201
+
+cluster:
+  forceInMemoryLog: false
+  logStorePath: /var/run/dapr/raft-log
+  logStoreWinPath: C:\\raft-log
+
+volumeclaims:
+  storageSize: 1Gi
+  storageClassName:
+
+replicationFactor: 100

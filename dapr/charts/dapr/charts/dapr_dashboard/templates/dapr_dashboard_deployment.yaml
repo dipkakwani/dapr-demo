@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapr-dashboard
+  labels:
+    app: dapr-dashboard
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: dapr-dashboard
+  template:
+    metadata:
+      labels:
+        app: dapr-dashboard
+        app.kubernetes.io/name: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Values.global.tag }}
+        app.kubernetes.io/component: dashboard
+        app.kubernetes.io/part-of: "dapr"
+        app.kubernetes.io/managed-by: "helm"
+    spec:
+      serviceAccountName: dashboard-reader
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                    - {{ .Values.global.daprControlPlaneOs }}
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                    - {{ .Values.global.daprControlPlaneArch }}
+{{- if eq .Values.global.ha.enabled true }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - dapr-dashboard
+            topologyKey: "kubernetes.io/hostname"
+{{- end }}
+      containers:
+      - name: dapr-dashboard
+        image: "{{ .Values.image.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 20Mi
+{{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.image.imagePullSecrets }}
+{{- end }}

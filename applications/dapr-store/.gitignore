@@ -1,0 +1,21 @@
+# Secrets here
+**/.env
+
+# Dapr components
+# **/components/**
+# !web/frontend/src/components/**
+
+# Go binaries
+cmd/cart/cart
+cmd/orders/orders
+cmd/users/users
+cmd/products/products
+cmd/frontend-host/frontend-host
+
+# My configs
+**/my*.yaml
+
+# Code coverage & test output
+web/frontend/coverage
+**/node_modules/**
+output/**

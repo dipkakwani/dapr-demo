@@ -1,0 +1,19 @@
+global:
+  registry: docker.io/daprio
+  tag: "1.0.0-rc.1"
+  dnsSuffix: ".cluster.local"
+  logAsJson: false
+  imagePullPolicy: Always
+  imagePullSecrets: ""
+  ha:
+    enabled: false
+    replicaCount: 3
+  prometheus:
+    enabled: true
+    port: 9090
+  mtls:
+    enabled: true
+    workloadCertTTL: 24h
+    allowedClockSkew: 15m
+  daprControlPlaneOs: linux
+  daprControlPlaneArch: amd64

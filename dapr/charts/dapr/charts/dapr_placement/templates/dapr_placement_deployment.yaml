@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dapr-placement-server
+  labels:
+    app: dapr-placement-server
+spec:
+{{- if eq .Values.global.ha.enabled true }}
+  replicas: {{ .Values.global.ha.replicaCount }}
+{{- else }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  serviceName: dapr-placement-server
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: dapr-placement-server
+  template:
+    metadata:
+      labels:
+        app: dapr-placement-server
+        app.kubernetes.io/name: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Values.global.tag }}
+        app.kubernetes.io/component: placement
+        app.kubernetes.io/part-of: "dapr"
+        app.kubernetes.io/managed-by: "helm"
+{{- if eq .Values.global.prometheus.enabled true }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.global.prometheus.enabled }}"
+        prometheus.io/port: "{{ .Values.global.prometheus.port }}"
+        prometheus.io/path: "/"
+{{- end }}
+    spec:
+      containers:
+      - name: dapr-placement-server
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 3
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 3
+          failureThreshold: 5
+{{- if contains "/" .Values.image.name }}
+        image: "{{ .Values.image.name }}"
+{{- else }}
+        image: "{{ .Values.global.registry }}/dapr:{{ .Values.global.tag }}"
+{{- end }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 500Mi
+          requests:
+            cpu: 250m
+            memory: 100Mi
+        volumeMounts:
+          - name: credentials
+            mountPath: /var/run/dapr/credentials
+            readOnly: true
+{{- if eq .Values.global.ha.enabled true }}
+  {{- if eq .Values.cluster.forceInMemoryLog false }}
+          - name: raft-log
+    {{- if eq .Values.global.daprControlPlaneOs "windows" }}
+            mountPath: {{ .Values.cluster.logStoreWinPath }}
+    {{- else }}
+            mountPath: {{ .Values.cluster.logStorePath }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+        ports:
+          - containerPort: {{ .Values.ports.apiPort }}
+            name: api
+          - containerPort: {{ .Values.ports.raftRPCPort }}
+            name: raft-node
+{{- if eq .Values.global.prometheus.enabled true }}
+          - name: metrics
+            containerPort: {{ .Values.global.prometheus.port }}
+            protocol: TCP
+{{- end }}
+        command:
+        - "/placement"
+        args:
+{{- if eq .Values.global.ha.enabled true }}
+        - "--id"
+        - "$(PLACEMENT_ID)"
+        - "--initial-cluster"
+        - {{ template "dapr_placement.initialcluster" . }}
+  {{- if eq .Values.cluster.forceInMemoryLog false }}
+        - "--raft-logstore-path"
+    {{- if eq .Values.global.daprControlPlaneOs "windows" }}
+        - "{{ .Values.cluster.logStoreWinPath }}\\$(PLACEMENT_ID)"
+    {{- else }}
+        - "{{ .Values.cluster.logStorePath }}/$(PLACEMENT_ID)"
+    {{- end }}
+  {{- end }}
+{{- end }}
+        - "--log-level"
+        - {{ .Values.logLevel }}
+{{- if eq .Values.global.logAsJson true }}
+        - "--log-as-json"
+{{- end }}
+{{- if eq .Values.global.prometheus.enabled true }}
+        - "--enable-metrics"
+        - "--replicationFactor"
+        - "{{ .Values.replicationFactor }}"
+        - "--metrics-port"
+        - "{{ .Values.global.prometheus.port }}"
+{{- else }}
+        - "--enable-metrics=false"
+{{- end }}
+{{- if eq .Values.global.mtls.enabled true }}
+        - "--tls-enabled"
+{{- end }}
+        env:
+          - name: PLACEMENT_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      serviceAccountName: dapr-operator
+      volumes:
+        - name: credentials
+          secret:
+            secretName: dapr-trust-bundle
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                    - {{ .Values.global.daprControlPlaneOs }}
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                    - {{ .Values.global.daprControlPlaneArch }}
+{{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecrets }}
+{{- end }}
+{{- if eq .Values.global.ha.enabled true }}
+  {{- if eq .Values.cluster.forceInMemoryLog false }}
+  volumeClaimTemplates:
+  - metadata:
+      name: raft-log
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.volumeclaims.storageSize }}
+    {{- if .Values.volumeclaims.storageClassName }}
+      storageClassName: {{ .Values.volumeclaims.storageClassName }}
+    {{- end }}
+  {{- end }}
+{{- end }}
