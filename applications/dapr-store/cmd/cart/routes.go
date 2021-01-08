@@ -23,6 +23,9 @@ import (
 // All routes we need should be registered here
 //
 func (api API) addRoutes(router *mux.Router) {
+	router.HandleFunc("/addItem/{username}/{productId}", auth.JWTValidator(api.addItem))
+	router.HandleFunc("/deleteItem/{username}/{productId}", auth.JWTValidator(api.deleteItem))
+	router.HandleFunc("/setProduct/{username}/{productId}/{count}", auth.JWTValidator(api.setProductCount))
 	router.HandleFunc("/setProduct/{username}/{productId}/{count}", auth.JWTValidator(api.setProductCount))
 	router.HandleFunc("/get/{username}", auth.JWTValidator(api.getCart))
 	router.HandleFunc("/submit", auth.JWTValidator(api.submitCart)).Methods("POST")
@@ -32,10 +35,65 @@ func (api API) addRoutes(router *mux.Router) {
 //
 //
 //
+func (api API) addItem(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("add item called")
+	vars := mux.Vars(req)
+	cart, etag, err := api.service.GetWithETag(vars["username"])
+	count := 1
+	if val, ok := cart.Products[vars["productId"]]; ok {
+		log.Printf("Element %s already in cart %s", vars["productId"], val)
+		count = val + 1
+	}
+
+	err = api.service.SetProductCount(cart, vars["productId"], count, etag)
+	if err != nil {
+		prob := err.(*problem.Problem)
+		prob.Send(resp)
+		return
+	}
+
+	resp.Header().Set("Content-Type", "application/json")
+	json, _ := json.Marshal(cart)
+	log.Printf("cart %s", json)
+	resp.Write(json)
+}
+
+//
+//
+//
+func (api API) deleteItem(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("delete Item called")
+	vars := mux.Vars(req)
+	cart, etag, err := api.service.GetWithETag(vars["username"])
+
+	err = api.service.SetProductCount(cart, vars["productId"], 0, etag)
+	if err != nil {
+		prob := err.(*problem.Problem)
+		prob.Send(resp)
+		return
+	}
+
+	resp.Header().Set("Content-Type", "application/json")
+	json, _ := json.Marshal(cart)
+	log.Printf("cart %s", json)
+	resp.Write(json)
+}
+
+//
+//
+//
 func (api API) setProductCount(resp http.ResponseWriter, req *http.Request) {
 	log.Printf("set product called")
 	vars := mux.Vars(req)
-	cart, err := api.service.Get(vars["username"])
+	cart, etag, err := api.service.GetWithETag(vars["username"])
+	urlParams := req.URL.Query()
+	if val, ok := urlParams["etag"]; ok {
+		log.Printf("Value %s etag %s", val, etag)
+		if val[0] != etag {
+			problem.New("err://etag-mismatch", "setProductCount failed", 500, err.Error(), api.ServiceName).Send(resp)
+			return
+		}
+	}
 
 	count, err := strconv.Atoi(vars["count"])
 	if err != nil {
@@ -43,7 +101,7 @@ func (api API) setProductCount(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = api.service.SetProductCount(cart, vars["productId"], count)
+	err = api.service.SetProductCount(cart, vars["productId"], count, etag)
 	if err != nil {
 		prob := err.(*problem.Problem)
 		prob.Send(resp)

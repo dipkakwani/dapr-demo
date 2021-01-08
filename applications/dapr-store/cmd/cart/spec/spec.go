@@ -11,7 +11,8 @@ type Cart struct {
 // CartService defines core CRUD methods a cart service should have
 type CartService interface {
 	Get(string) (*Cart, error)
+	GetWithETag(string) (*Cart, string, error)
 	Submit(Cart) (*spec.Order, error)
-	SetProductCount(*Cart, string, int) error
+	SetProductCount(*Cart, string, int, string) error
 	Clear(*Cart) error
 }

@@ -61,6 +61,15 @@ func (s CartService) Get(username string) (*cartspec.Cart, error) {
 		cart.Products = make(map[string]int)
 		return cart, nil
 	}
+	// Declared an empty interface
+	var result map[string]interface{}
+
+	// Unmarshal or Decode the JSON to the interface.
+	json.Unmarshal(data, &result)
+
+	for k, v := range result {
+		log.Printf("key: %s value %s", k, v)
+	}
 
 	cart := &cartspec.Cart{}
 	err := json.Unmarshal(data, cart)
@@ -70,6 +79,43 @@ func (s CartService) Get(username string) (*cartspec.Cart, error) {
 	}
 
 	return cart, nil
+}
+
+//
+// GetWithETag fetches saved cart for a given user, if not exists an empty cart is returned
+//
+func (s CartService) GetWithETag(username string) (*cartspec.Cart, string, error) {
+	log.Printf("CART service get username: %s\n", username)
+	data, ETag, prob := s.GetStateWithETag(s.storeName, username)
+	if prob != nil {
+		return nil, "", prob
+	}
+
+	if len(data) <= 0 {
+		log.Printf("EMPTY CART\n")
+		cart := &cartspec.Cart{}
+		cart.ForUser = username
+		cart.Products = make(map[string]int)
+		return cart, ETag, nil
+	}
+	// Declared an empty interface
+	var result map[string]interface{}
+
+	// Unmarshal or Decode the JSON to the interface.
+	json.Unmarshal(data, &result)
+
+	for k, v := range result {
+		log.Printf("key: %s value %s", k, v)
+	}
+
+	cart := &cartspec.Cart{}
+	err := json.Unmarshal(data, cart)
+	if err != nil {
+		prob := problem.New("err://json-decode", "Malformed cart JSON", 500, "JSON could not be decoded", s.ServiceName)
+		return nil, ETag, prob
+	}
+
+	return cart, ETag, nil
 }
 
 //
@@ -126,7 +172,7 @@ func (s CartService) Submit(cart cartspec.Cart) (*orderspec.Order, error) {
 //
 // SetProductCount updates the count of a given product in the cart
 //
-func (s CartService) SetProductCount(cart *cartspec.Cart, productID string, count int) error {
+func (s CartService) SetProductCount(cart *cartspec.Cart, productID string, count int, etag string) error {
 	if count < 0 {
 		return problem.New("err://invalid-request", "SetProductCount error", 400, "Count can not be negative", s.ServiceName)
 	}
@@ -137,7 +183,7 @@ func (s CartService) SetProductCount(cart *cartspec.Cart, productID string, coun
 		cart.Products[productID] = count
 	}
 
-	prob := s.SaveState(s.storeName, cart.ForUser, cart)
+	prob := s.SaveStateWithETag(s.storeName, cart.ForUser, cart, etag)
 	if prob != nil {
 		return prob
 	}

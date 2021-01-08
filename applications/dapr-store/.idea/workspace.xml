@@ -50,31 +50,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0723b529-c83c-4f03-8e0d-454cf98b201c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/cmd/cart/components/pubsub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/components/pubsub.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cart/components/statestore.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/components/statestore.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/cart/impl/impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/impl/impl.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/cart/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/routes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/cart/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/orders/components/pubsub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/orders/components/pubsub.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/orders/components/statestore.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/orders/components/statestore.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/orders/impl/impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/orders/impl/impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/orders/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/orders/run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/products/components/pubsub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/products/components/pubsub.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/products/components/statestore.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/products/components/statestore.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/products/impl/impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/products/impl/impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/products/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/products/routes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/products/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/products/run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/users/components/pubsub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/users/components/pubsub.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/users/components/statestore.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/users/components/statestore.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/users/impl/impl.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/users/impl/impl.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/users/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/users/run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy/dapr/state.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/deploy/dapr/state.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/cart/spec/spec.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/cart/spec/spec.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/dapr/dapr.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/dapr/dapr.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/clear-redis.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/clear-redis.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/local-gateway/components/pubsub.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/local-gateway/components/pubsub.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/local-gateway/components/statestore.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/local-gateway/components/statestore.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/local-gateway/dapr.conf" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/local-gateway/dapr.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/local-gateway/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/local-gateway/run.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/cpp/a.out" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/cpp/a.out" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/cpp/run_dapr_store.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/cpp/run_dapr_store.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../hello-world/.app.py.swp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../components-contrib/state/redis/redis.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../components-contrib/state/redis/redis.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../components-contrib/state/weakisolationmockdb/weakisolationmockdb.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../components-contrib/state/weakisolationmockdb/weakisolationmockdb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../dapr/pkg/http/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/../../dapr/pkg/http/api.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,12 +70,13 @@
   </component>
   <component name="GOROOT" path="/usr/lib/golang" />
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="ProjectId" id="1kfx1lbZRVIx9T4bfhqARTQVOl4" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -99,10 +87,11 @@
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../dapr_repo/components-contrib" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -121,6 +110,11 @@
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$" />
+    </ignored-roots>
+  </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
   </component>
@@ -129,10 +123,14 @@
       <screen x="0" y="0" width="1920" height="1048" />
     </state>
     <state x="690" y="224" width="530" height="601" key="FileChooserDialogImpl/0.0.1920.1048@0.0.1920.1048" timestamp="1607414664359" />
-    <state x="705" y="141" width="500" height="767" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1608201945193">
+    <state x="302" y="70" key="SettingsEditor" timestamp="1609311008774">
       <screen x="0" y="0" width="1920" height="1048" />
     </state>
-    <state x="705" y="141" width="500" height="767" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.1920.1048@0.0.1920.1048" timestamp="1608201945193" />
+    <state x="302" y="70" key="SettingsEditor/0.0.1920.1048@0.0.1920.1048" timestamp="1609311008774" />
+    <state x="705" y="141" width="500" height="767" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1610036547284">
+      <screen x="0" y="0" width="1920" height="1048" />
+    </state>
+    <state x="705" y="141" width="500" height="767" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.1920.1048@0.0.1920.1048" timestamp="1610036547284" />
     <state x="539" y="13" width="840" height="1034" key="search.everywhere.popup" timestamp="1608558418799">
       <screen x="0" y="0" width="1920" height="1048" />
     </state>

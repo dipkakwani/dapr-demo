@@ -37,6 +37,13 @@ type state struct {
 	Value interface{} `json:"value"`
 }
 
+// DaprState is the payload for the Dapr state API
+type stateEtag struct {
+	Key   string      `json:"key"`
+	Value interface{} `json:"value"`
+	ETag string 		`json:"etag"`
+}
+
 type bindingOut struct {
 	Metadata map[string]string `json:"metadata"`
 	Data     interface{}       `json:"data"`
@@ -85,8 +92,31 @@ func (h *Helper) GetState(storeName, key string) ([]byte, *problem.Problem) {
 	}
 
 	defer daprResp.Body.Close()
+	daprResp.Header.Get("Etag")
 	body, _ := ioutil.ReadAll(daprResp.Body)
+	log.Printf("response body")
+	log.Printf("%s", body)
 	return body, nil
+}
+
+//
+// GetStateWithETag returns the state of given key with ETag
+//
+func (h *Helper) GetStateWithETag(storeName, key string) ([]byte, string, *problem.Problem) {
+	daprURL := fmt.Sprintf(getStateURL, h.Port, storeName, key)
+	log.Printf("GET state save url %s\n", daprURL)
+
+	daprResp, err := http.Get(daprURL)
+	if err != nil || (daprResp.StatusCode < 200 || daprResp.StatusCode > 299) {
+		return nil, "", problem.NewAPIProblem(daprURL, "Dapr get state failed", h.ServiceName, daprResp, err)
+	}
+
+	defer daprResp.Body.Close()
+	body, _ := ioutil.ReadAll(daprResp.Body)
+	log.Printf("response body")
+	log.Printf("%s", body)
+	return body, daprResp.Header.Get("Etag"), nil
+
 }
 
 //
@@ -99,6 +129,34 @@ func (h *Helper) SaveState(storeName, key string, value interface{}) *problem.Pr
 	}
 
 	jsonPayload, err := json.Marshal([]state{daprPayload})
+	if err != nil {
+		return problem.NewAPIProblem("err://json-marshall", "State JSON marshalling error", h.ServiceName, nil, err)
+	}
+
+	log.Printf("### State save helper, key:%s payload:%+v\n", key, string(jsonPayload))
+
+	daprURL := fmt.Sprintf(saveStateURL, h.Port, storeName)
+	daprResp, err := http.Post(daprURL, "application/json", bytes.NewBuffer(jsonPayload))
+	if err != nil || (daprResp.StatusCode < 200 || daprResp.StatusCode > 299) {
+		return problem.NewAPIProblem(daprURL, "Dapr save state failed", h.ServiceName, daprResp, err)
+	}
+
+	// All good
+	return nil
+}
+
+//
+// SaveState stores value as serialized state into Dapr
+//
+func (h *Helper) SaveStateWithETag(storeName, key string, value interface{}, etag string) *problem.Problem {
+	daprPayload := stateEtag{
+		Key:   key,
+		Value: value,
+		ETag: etag,
+	}
+
+	jsonPayload, err := json.Marshal([]stateEtag{daprPayload})
+
 	if err != nil {
 		return problem.NewAPIProblem("err://json-marshall", "State JSON marshalling error", h.ServiceName, nil, err)
 	}

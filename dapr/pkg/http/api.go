@@ -471,6 +471,10 @@ func (a *api) onGetState(reqCtx *fasthttp.RequestCtx) {
 	}
 
 	metadata := getMetadataFromRequest(reqCtx)
+	log.Info("[API] Metadata received in request")
+	for k, v := range metadata {
+		log.Infof("[API] key %s value %s", k , v)
+	}
 
 	key := reqCtx.UserValue(stateKeyParam).(string)
 	consistency := string(reqCtx.QueryArgs().Peek(consistencyParam))

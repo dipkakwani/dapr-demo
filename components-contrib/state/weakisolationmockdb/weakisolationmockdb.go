@@ -19,6 +19,8 @@ Sample configuration in yaml:
 		value: <host:ip>
 	  - name: storeName
 		value: <storeName>
+	  - name: replicas
+		value: <numberOfReplicas>
 
 
 */
@@ -27,14 +29,19 @@ package weakisolationmockdb
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/dapr/components-contrib/state"
 	"github.com/dapr/dapr/pkg/logger"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"math/rand"
 	gohttp "net/http"
+	"strconv"
+	"time"
 )
 
 const (
@@ -44,12 +51,16 @@ const (
 
 	hostKey = "host"
 	storeNameKey = "storeName"
+	replicasKey = "replicas"
 )
 
 type StateStore struct {
 	state.DefaultBulkStore
 	baseUrl string
 	client gohttp.Client
+	replicas int
+	clientId uint32
+
 
 	logger logger.Logger
 }
@@ -57,6 +68,7 @@ type StateStore struct {
 type stateStoreMetadata struct {
 	host string
 	storeName string
+	replicas int
 }
 
 type HTTPResponse struct {
@@ -86,10 +98,19 @@ func (r *StateStore) Init(metadata state.Metadata) error {
 
 	r.client = gohttp.Client{}
 	r.baseUrl = meta.host + "/" + meta.storeName
+	r.replicas = meta.replicas
+	r.clientId = genId()
 
-	log.Debugf("WeakIsolationMockDB initialised, host: %s storeName: %s", meta.host, meta.storeName)
+	log.Infof("WeakIsolationMockDB initialised client id: %s, host: %s storeName: %s",
+					r.clientId, meta.host, meta.storeName)
 
 	return nil
+}
+
+func genId() uint32 {
+	u1 := uuid.New()
+	id := binary.BigEndian.Uint32(u1[:4])
+	return id
 }
 
 func (r *StateStore) Delete(req *state.DeleteRequest) error {
@@ -111,10 +132,13 @@ func (r *StateStore) BulkDelete(req []state.DeleteRequest) error {
 
 func (r *StateStore) Get(req *state.GetRequest) (*state.GetResponse, error) {
 	log.Debugf("fetching %s", req.Key)
-	resp := r.DoRequest("GET", r.baseUrl + "/" + req.Key, nil, nil)
 
-	//var JSONData map[string]interface{}
-	//json.Unmarshal(resp.RawBody, &JSONData)
+	log.Info("[MOCKDB] Metadata received in request")
+	for k, v := range req.Metadata {
+		log.Infof("[MOCKDB] key %s value %s", k , v)
+	}
+
+	resp := r.DoRequest("GET", r.baseUrl + "/" + req.Key, nil, req.Metadata)
 
 	return &state.GetResponse{
 		Data: resp.RawBody,
@@ -158,22 +182,32 @@ func getMetadata(metadata map[string]string) (*stateStoreMetadata, error) {
 		return nil, errors.New(fmt.Sprintf("missing or empty %s field from metadata", storeNameKey))
 	}
 
+	if val, ok := metadata[replicasKey]; ok && val != "" {
+		meta.replicas, _ =  strconv.Atoi(val)
+	} else {
+		return nil, errors.New(fmt.Sprintf("missing or empty %s field from metadata", replicasKey))
+	}
+
 	return &meta, nil
 }
 
-func (r *StateStore) DoRequest(method, url string, body []byte, params map[string]string, headers ...string) HTTPResponse {
-	if params != nil {
-		url += "?"
-		for k, v := range params {
-			url += k + "=" + v + "&"
-		}
-		url = url[:len(url)-1]
-	}
+func (r *StateStore) DoRequest(method, url string, body []byte, metadata map[string]string, headers ...string) HTTPResponse {
 	req, _ := gohttp.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	if len(headers) == 1 {
 		req.Header.Set("If-Match", headers[0])
 	}
+
+	randomSource := rand.NewSource(time.Now().UnixNano())
+	randGen := rand.New(randomSource)
+	req.Header.Set("session-id", fmt.Sprint(randGen.Intn(r.replicas)))
+
+	if metadata != nil {
+		for k, v := range metadata {
+			req.Header.Set(k, v)
+		}
+	}
+
 	res, err := r.client.Do(req)
 	if err != nil {
 		panic(fmt.Errorf("failed to request: %v", err))
