@@ -36,13 +36,15 @@ func (api API) addRoutes(router *mux.Router) {
 //
 //
 func (api API) addItem(resp http.ResponseWriter, req *http.Request) {
-	log.Printf("add item called")
+	log.Printf("Add item called")
 	vars := mux.Vars(req)
 	cart, etag, err := api.service.GetWithETag(vars["username"])
 	count := 1
 	if val, ok := cart.Products[vars["productId"]]; ok {
-		log.Printf("Element %s already in cart %s", vars["productId"], val)
+		log.Printf("Element %s already in cart %s", vars["productId"], strconv.Itoa(val))
 		count = val + 1
+	} else {
+		log.Printf("Element %s not in cart", vars["productId"])
 	}
 
 	err = api.service.SetProductCount(cart, vars["productId"], count, etag)
@@ -62,7 +64,7 @@ func (api API) addItem(resp http.ResponseWriter, req *http.Request) {
 //
 //
 func (api API) deleteItem(resp http.ResponseWriter, req *http.Request) {
-	log.Printf("delete Item called")
+	log.Printf("Delete Item called")
 	vars := mux.Vars(req)
 	cart, etag, err := api.service.GetWithETag(vars["username"])
 
@@ -90,7 +92,7 @@ func (api API) setProductCount(resp http.ResponseWriter, req *http.Request) {
 	if val, ok := urlParams["etag"]; ok {
 		log.Printf("Value %s etag %s", val, etag)
 		if val[0] != etag {
-			problem.New("err://etag-mismatch", "setProductCount failed", 500, err.Error(), api.ServiceName).Send(resp)
+			problem.New("err://etag-mismatch", "setProductCount failed", 500, "ETag mismatch", api.ServiceName).Send(resp)
 			return
 		}
 	}
@@ -118,7 +120,7 @@ func (api API) setProductCount(resp http.ResponseWriter, req *http.Request) {
 //
 //
 func (api API) getCart(resp http.ResponseWriter, req *http.Request) {
-	log.Printf("get cart called")
+	log.Printf("Get cart called")
 	vars := mux.Vars(req)
 
 	cart, err := api.service.Get(vars["username"])
@@ -130,7 +132,7 @@ func (api API) getCart(resp http.ResponseWriter, req *http.Request) {
 
 	resp.Header().Set("Content-Type", "application/json")
 	json, _ := json.Marshal(cart)
-	log.Printf("cart %s", json)
+	log.Printf("GET cart response %s", json)
 	resp.Write(json)
 }
 

@@ -67,7 +67,7 @@ void concurrent_delete(int t_id, string user, string item, int iter_count) {
     cout << "Iter "<< iter_count << " Thread " << t_id << " Read: "<< q1 << " " <<  q2 << endl;
 
     if (q1 == 0 && q2 == 2)
-        cout << "FOUND VIOLATION at iteration " << iter_count << endl;
+        cout << "FOUND VIOLATION at iteration " << iter_count << " user " << user << endl;
 }
 
 
@@ -86,7 +86,7 @@ void concurrent_checkout(int t_id, string user, string item, int iter_count) {
     cout << "Iter "<< iter_count << " Thread " << t_id << " Read: "<< q1 << " " <<  q2 << endl;
 
     if (q1 == 0 && q2 == 2)
-        cout << "FOUND VIOLATION at iteration " << iter_count << endl;
+        cout << "FOUND VIOLATION at iteration " << iter_count << " user " << user << endl;
 }
 
 
@@ -108,7 +108,7 @@ string gen_random(const int len, long seed) {
 
 
 int main() {
-    int num_iters = 100;
+    int num_iters = 1000;
     int num_threads = 2;
 
 //    cout << exec("dapr invoke --app-id users --method register --payload \'{\"username\":\"dip\", \"displayName\":\"Diptanshu\", \"profileImage\":\"abc.jpg\"}\'");
@@ -118,7 +118,7 @@ int main() {
     for (int i = 0; i < num_iters; i++) {
         string user = gen_random(5, i * 11 + 97);
         vector<thread> threads;
-        clear_cart(user);
+        /* clear_cart(user); */
         add_item(user, item, 1);
 
         for (int j = 0; j < num_threads; j++) {

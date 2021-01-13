@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	cartspec "github.com/benc-uk/dapr-store/cmd/cart/spec"
@@ -85,8 +86,8 @@ func (s CartService) Get(username string) (*cartspec.Cart, error) {
 // GetWithETag fetches saved cart for a given user, if not exists an empty cart is returned
 //
 func (s CartService) GetWithETag(username string) (*cartspec.Cart, string, error) {
-	log.Printf("CART service get username: %s\n", username)
-	data, ETag, prob := s.GetStateWithETag(s.storeName, username)
+	log.Printf("GET CART with etag for user: %s\n", username)
+	data, etag, prob := s.GetStateWithETag(s.storeName, username)
 	if prob != nil {
 		return nil, "", prob
 	}
@@ -96,7 +97,7 @@ func (s CartService) GetWithETag(username string) (*cartspec.Cart, string, error
 		cart := &cartspec.Cart{}
 		cart.ForUser = username
 		cart.Products = make(map[string]int)
-		return cart, ETag, nil
+		return cart, etag, nil
 	}
 	// Declared an empty interface
 	var result map[string]interface{}
@@ -104,18 +105,14 @@ func (s CartService) GetWithETag(username string) (*cartspec.Cart, string, error
 	// Unmarshal or Decode the JSON to the interface.
 	json.Unmarshal(data, &result)
 
-	for k, v := range result {
-		log.Printf("key: %s value %s", k, v)
-	}
-
 	cart := &cartspec.Cart{}
 	err := json.Unmarshal(data, cart)
 	if err != nil {
 		prob := problem.New("err://json-decode", "Malformed cart JSON", 500, "JSON could not be decoded", s.ServiceName)
-		return nil, ETag, prob
+		return nil, etag, prob
 	}
 
-	return cart, ETag, nil
+	return cart, etag, nil
 }
 
 //
@@ -176,6 +173,8 @@ func (s CartService) SetProductCount(cart *cartspec.Cart, productID string, coun
 	if count < 0 {
 		return problem.New("err://invalid-request", "SetProductCount error", 400, "Count can not be negative", s.ServiceName)
 	}
+	log.Printf("SET Product %s Count %s in cart, etag: %s", productID,
+		strconv.Itoa(count), etag)
 
 	if count == 0 {
 		delete(cart.Products, productID)

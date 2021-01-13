@@ -131,25 +131,71 @@ func (r *StateStore) BulkDelete(req []state.DeleteRequest) error {
 }
 
 func (r *StateStore) Get(req *state.GetRequest) (*state.GetResponse, error) {
-	log.Debugf("fetching %s", req.Key)
+	log.Debugf("GET request %s", req.Key)
+	var resp HTTPResponse
+	var body []byte
+	etag := -1
 
-	log.Info("[MOCKDB] Metadata received in request")
-	for k, v := range req.Metadata {
-		log.Infof("[MOCKDB] key %s value %s", k , v)
+	if req.Options.Consistency == state.Strong {
+		// Send request to all replicas and pick the value with the largest ETag
+		for i := 0; i < r.replicas; i++ {
+			resp = r.DoRequest("GET", r.baseUrl + "/" + req.Key, nil, fmt.Sprint(i))
+			respEtag, _ := strconv.Atoi(resp.RawHeader.Get("ETag"))
+
+			if respEtag > etag {
+				body = resp.RawBody
+				etag = respEtag
+			}
+		}
+
+	} else {
+		// Randomly choose one replica
+		randomSource := rand.NewSource(time.Now().UnixNano())
+		randGen := rand.New(randomSource)
+		sessionId := fmt.Sprint(randGen.Intn(r.replicas))
+		resp = r.DoRequest("GET", r.baseUrl + "/" + req.Key, nil, sessionId)
+		body = resp.RawBody
+		etag, _ = strconv.Atoi(resp.RawHeader.Get("ETag"))
 	}
 
-	resp := r.DoRequest("GET", r.baseUrl + "/" + req.Key, nil, req.Metadata)
-
 	return &state.GetResponse{
-		Data: resp.RawBody,
+		Data: body,
+		ETag: strconv.Itoa(etag),
 	}, nil
 }
 
 func (r *StateStore) Set(req *state.SetRequest) error {
-	log.Debugf("saving %s", req.Key)
+	log.Debugf("SET request %s", req.Key)
 	b, _ := json.Marshal(req)
-	r.DoRequest("POST", r.baseUrl, b, nil)
 
+	if req.Options.Consistency == state.Strong {
+		// Send request to all replicas in sequential order, making sure the first replica
+		// has the same ETag
+		resp := r.DoRequest("POST", r.baseUrl, b, "0")
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			// Failed in the first replica
+			return errors.New(resp.ErrorBody["description"])
+		}
+
+		// Skip ETag for the rest of replicas
+		req.ETag = ""
+		b, _ := json.Marshal(req)
+
+		for i := 1; i < r.replicas; i++ {
+			r.DoRequest("POST", r.baseUrl, b, fmt.Sprint(i))
+		}
+
+	} else {
+		// Randomly choose one replica
+		randomSource := rand.NewSource(time.Now().UnixNano())
+		randGen := rand.New(randomSource)
+		sessionId := fmt.Sprint(randGen.Intn(r.replicas))
+		resp := r.DoRequest("POST", r.baseUrl, b, sessionId)
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return errors.New(resp.ErrorBody["description"])
+		}
+	}
 	return nil
 }
 
@@ -191,22 +237,14 @@ func getMetadata(metadata map[string]string) (*stateStoreMetadata, error) {
 	return &meta, nil
 }
 
-func (r *StateStore) DoRequest(method, url string, body []byte, metadata map[string]string, headers ...string) HTTPResponse {
+func (r *StateStore) DoRequest(method, url string, body []byte, sessionId string, headers ...string) HTTPResponse {
 	req, _ := gohttp.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	if len(headers) == 1 {
 		req.Header.Set("If-Match", headers[0])
 	}
 
-	randomSource := rand.NewSource(time.Now().UnixNano())
-	randGen := rand.New(randomSource)
-	req.Header.Set("session-id", fmt.Sprint(randGen.Intn(r.replicas)))
-
-	if metadata != nil {
-		for k, v := range metadata {
-			req.Header.Set(k, v)
-		}
-	}
+	req.Header.Set("session-id", sessionId)
 
 	res, err := r.client.Do(req)
 	if err != nil {

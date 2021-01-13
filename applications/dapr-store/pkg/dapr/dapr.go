@@ -37,11 +37,17 @@ type state struct {
 	Value interface{} `json:"value"`
 }
 
+// SetStateOption controls how a state store reacts to a set request
+type SetStateOption struct {
+	Consistency string `json:"consistency"`           // "eventual, strong"
+}
+
 // DaprState is the payload for the Dapr state API
 type stateEtag struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
-	ETag string 		`json:"etag"`
+	Key      string            `json:"key"`
+	Value    interface{}       `json:"value"`
+	ETag     string            `json:"etag,omitempty"`
+	Options  SetStateOption    `json:"options,omitempty"`
 }
 
 type bindingOut struct {
@@ -113,8 +119,7 @@ func (h *Helper) GetStateWithETag(storeName, key string) ([]byte, string, *probl
 
 	defer daprResp.Body.Close()
 	body, _ := ioutil.ReadAll(daprResp.Body)
-	log.Printf("response body")
-	log.Printf("%s", body)
+	log.Printf("GET key %s Response: %s", key, body)
 	return body, daprResp.Header.Get("Etag"), nil
 
 }
@@ -153,6 +158,9 @@ func (h *Helper) SaveStateWithETag(storeName, key string, value interface{}, eta
 		Key:   key,
 		Value: value,
 		ETag: etag,
+		Options: SetStateOption{
+			Consistency: "strong",
+		},
 	}
 
 	jsonPayload, err := json.Marshal([]stateEtag{daprPayload})
