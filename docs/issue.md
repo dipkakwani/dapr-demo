@@ -2,36 +2,28 @@
 
 Hello team,
 
-This write-up is a proposal for addition of a new state store to Dapr. Weak-Isolatation-Mock-DB ([Github](https://github.com/microsoft/weak-isolation-mock-db)) can be used to systematically test application against weak behaviors of databases. In practice, real world databases rarely generate weaker behaviors which makes it very difficult for application developers to test all possible worst-case scenarios and can lead to bugs going unnoticed. Weak-Isolatation-Mock-DB with Dapr can be used by developers as a pluggable replacement for existing state store to throughly test their applications with weaker behaviors.
+We would like to propose the addition of a new state store that is meant for testing of dapr applications. The store implementation is available here: Weak-Isolatation-Mock-DB ([Github](https://github.com/microsoft/weak-isolation-mock-db)). It has been designed to test applications against _weak behaviors_ of databases, such as those arising when using _eventual consistency_ instead of _strong consistency_. Real-world databases only [rarely](http://www.news.cs.nyu.edu/~jinyang/ds-reading/facebookmeasure.pdf) exhibit weak behaviors, although they do happen, which makes it very difficult for application developers to test against worst-case scenarios, leading to bugs going unnoticed. Weak-Isolatation-Mock-DB can generate the worst-case scenarios with a much higher probability. We make an argument below showcasing why Weak-Isolatation-Mock-DB is useful. 
 
-
-
-Dapr currently supports only two consistency levels: eventual and strong consistency, based on quorum configuration.  When using eventual consistency, the store only waits for only one replica. In theory, this could lead to store returning stale data, but in practice most of the state stores perform well even with eventual consistency. 
-
-In the below experiment, we tested what it takes to break existing Dapr applications with a Dapr-supported state store.
+Dapr currently supports only two consistency levels: eventual and strong consistency, based on quorum configuration.  When using eventual consistency, the store waits for only one replica, which can cause a read to return stale data. In the below experiment, we tested what it takes to break existing dapr applications with a dapr-supported state store.
 
 ### Applications
 
 #### Hello World [[Github](https://github.com/dapr/quickstarts/tree/master/hello-world)]
 
-This is a simple hello world application to which we added an additional check for read-your-writes consistency. We use Cassandra as a state store and show that even with such a simple application, it is possible to violate read-your-writes consistency. See appendix for details on how to reproduce this violation.
-
-
+This is a simple hello world application to which we added an additional check for _read-your-writes_ consistency. That is, we do a write operation immediately followed by a read and then assert that the read returns the value just written. We use Cassandra as a state store and show that even with such a simple application, it is possible to violate read-your-writes consistency. See appendix for details on how to reproduce this violation.
 
 #### Dapr-Store [[Github](https://github.com/benc-uk/dapr-store)]
 
-This is a shopping store application built using Dapr. As with any other shopping cart application, there are few anomalies which exist with this application. A well-known anomaly is that of reappearing of a deleted item. The figure below shows the anomaly. 
+This is a shopping store application built using Dapr. We highlight an _anomaly_ in the application where a deleted iteam reappears in the shopping cart. 
+
+Consider the case when a user is accessing their shopping cart from multiple clients, deleting an item in one session and adding the item in the second session. What can happen here in the following. When the user looks at their cart, they see the delete having succeeded. After a refresh (reading the cart again), the deleted item comes back and there are two items in the cart! The figure below illustrates this example. 
 
 
 
 ![Shopping Cart Example](shopping_cart_example.png)
 
 
-
-Consider the case when a user is accessing cart from multiple clients, deleting and adding an item simultaneously. This might lead to the user observing delete being successful in the first read, but in the next read, the deleted item might reappear in the cart. This anomaly is difficult to reproduce with real world databases, we confirmed this by running it with Redis and Cassandra state stores and did not observe any violation within reasonable amount of time. However, this anomaly can be reproduced using the modified Cassandra setup as that of the above application. The problem with this approach is that it's very specific to the state store and can not be easily scaled to a large real-world application which use multiple state stores.
-
-
-We used Weak-Isolatation-Mock-DB as a Dapr state store and were able to reproduce the violation within ~20 iterations (< 2 seconds). 
+This anomaly cannot happen under strong consistency, but is a valid behavior under eventual consistency. It is, however, difficult to reproduce with a real world database. We confirmed this by running it with Redis and Cassandra state stores and did not observe any violation within reasonable amount of time. However, this anomaly can be reproduced using a modified Cassandra setup where we delibrately injected faults at the right place and time in the Cassandra cluster. Weak-Isolatation-Mock-DB makes it very easy: just run the dapr application against Weak-Isolatation-Mock-DB. Each run of the app will observe different (randomly chosen) values on store reads. In this case, we catch the anomaly in roughly 20 iterations (< 2 seconds). 
 
 ##### Fixing Shopping Cart Anomaly
 
