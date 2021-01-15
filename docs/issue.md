@@ -2,37 +2,34 @@
 
 Hello team,
 
-We would like to propose the addition of a new state store that is meant for testing of dapr applications. The store implementation is available here: Weak-Isolatation-Mock-DB ([Github](https://github.com/microsoft/weak-isolation-mock-db)). It has been designed to test applications against _weak behaviors_ of databases, such as those arising when using _eventual consistency_ instead of _strong consistency_. Real-world databases only [rarely](http://www.news.cs.nyu.edu/~jinyang/ds-reading/facebookmeasure.pdf) exhibit weak behaviors, although they do happen, which makes it very difficult for application developers to test against worst-case scenarios, leading to bugs going unnoticed. Weak-Isolatation-Mock-DB can generate the worst-case scenarios with a much higher probability. We make an argument below showcasing why Weak-Isolatation-Mock-DB is useful. 
-
-Dapr currently supports only two consistency levels: eventual and strong consistency, based on quorum configuration.  When using eventual consistency, the store waits for only one replica, which can cause a read to return stale data. In the below experiment, we tested what it takes to break existing dapr applications with a dapr-supported state store.
+We would like to propose the addition of a new state store that is meant for testing of dapr applications. The store implementation is called [Weak-Isolatation-Mock-DB](https://github.com/microsoft/weak-isolation-mock-db). It has been designed to test applications against _weak behaviors_ of databases, such as those arising when using _eventual consistency_ instead of _strong consistency_. Real-world databases only [rarely](http://www.news.cs.nyu.edu/~jinyang/ds-reading/facebookmeasure.pdf) exhibit weak behaviors, although they do happen, which makes it very difficult for application developers to test against worst-case scenarios. Weak-Isolatation-Mock-DB can generate these worst-case scenarios with a much higher probability. It works as follows: on each read, it computes the set of return values possible under eventual consistency, and then randomly returns a value from this set. We make an argument below showcasing why Weak-Isolatation-Mock-DB is useful. 
 
 ### Applications
 
 #### Hello World [[Github](https://github.com/dapr/quickstarts/tree/master/hello-world)]
 
-This is a simple hello world application to which we added an additional check for _read-your-writes_ consistency. That is, we do a write operation immediately followed by a read and then assert that the read returns the value just written. We use Cassandra as a state store and show that even with such a simple application, it is possible to violate read-your-writes consistency. See appendix for details on how to reproduce this violation.
+Eventual consistency does not guarantee _read-your-writes_. That is, if you write a value and then immediately do a read, it need not return the value just written (even in the absence of any concurrent write).
+
+Does it happen in practice? Yes, it does. We modified the hello-world app to check for _read-your-writes_ then connected it to Cassandra with a special setup, and observed a violation of read-your-writes. See appendix for more details. 
 
 #### Dapr-Store [[Github](https://github.com/benc-uk/dapr-store)]
 
-This is a shopping store application built using Dapr. We highlight an _anomaly_ in the application where a deleted iteam reappears in the shopping cart. 
-
-Consider the case when a user is accessing their shopping cart from multiple clients, deleting an item in one session and adding the item in the second session. What can happen here in the following. When the user looks at their cart, they see the delete having succeeded. After a refresh (reading the cart again), the deleted item comes back and there are two items in the cart! The figure below illustrates this example. 
-
-
+This is a shopping store application built using Dapr. We highlight an _anomaly_ in the application where a deleted iteam reappears in the shopping cart when using eventual consistency. Consider the case when a user is accessing their shopping cart from multiple clients, deleting an item in one session and adding the item in the second session. What can happen here in the following. When the user first looks at their cart, they see the delete having succeeded. After a refresh, reading the cart again, the deleted item comes back and there are two items in the cart this time! The figure below illustrates this example. 
 
 ![Shopping Cart Example](shopping_cart_example.png)
 
+This anomaly is valid behavior under eventual consistency. It is, however, difficult to reproduce with a real world database. We confirmed this by running it with Redis and Cassandra state stores and did not observe any violation within reasonable amount of time. However, this anomaly can be reproduced using a modified Cassandra setup where we delibrately injected faults at the right place and time in the Cassandra cluster. 
 
-This anomaly cannot happen under strong consistency, but is a valid behavior under eventual consistency. It is, however, difficult to reproduce with a real world database. We confirmed this by running it with Redis and Cassandra state stores and did not observe any violation within reasonable amount of time. However, this anomaly can be reproduced using a modified Cassandra setup where we delibrately injected faults at the right place and time in the Cassandra cluster. Weak-Isolatation-Mock-DB makes it very easy: just run the dapr application against Weak-Isolatation-Mock-DB. Each run of the app will observe different (randomly chosen) values on store reads. In this case, we catch the anomaly in roughly 20 iterations (< 2 seconds). 
+Weak-Isolatation-Mock-DB makes testing the app against such corner-cases of eventual consistency easy. Just run the dapr application against Weak-Isolatation-Mock-DB. Each run of the app will observe different (randomly chosen) values on store reads. For this example, we catch the anomaly in roughly 20 iterations (< 2 seconds). 
 
 ##### Fixing Shopping Cart Anomaly
 
 Once the application developer knows that a violation exist, they have to fix the application. The item reappearing anomaly can be fixed in multiple ways, we describe one possible solution below:
 
-* Use ETags to read and write - In case of concurrent writes within a replica, only one write should go through
-* ETags alone is not sufficient to solve the issue, the writes done by the AddItem and DeleteItem have to be strongly consistent. Therefore either add happen before delete or vice versa, in all the replicas together.
+* Use ETags to read and write - In case of concurrent writes within a replica, only one write should go through.
+* ETags alone is not sufficient to solve the issue, the writes done by the AddItem and DeleteItem have to be strongly consistent. 
 
-We implemented the above solution and then did not observe any violation with Weak-Isolatation-Mock-DB.
+We implemented the above solution and then did not observe any violation when testing with Weak-Isolatation-Mock-DB.
 
 ### Appendix 
 
@@ -81,7 +78,7 @@ sudo iptables -A INPUT -p tcp --destination 127.0.0.2 --destination-port 7000 -j
 sudo iptables -A INPUT -p tcp --destination 127.0.0.3 --destination-port 7000 -j DROP
 ```
 
-4. Run hello world Dapr app
+3. Run hello world Dapr app
 
 ```bash
 dapr run --app-id nodeapp --app-port 3000 --dapr-http-port 3500 node app.js
