@@ -81,7 +81,7 @@ sudo iptables -A INPUT -p tcp --destination 127.0.0.2 --destination-port 7000 -j
 sudo iptables -A INPUT -p tcp --destination 127.0.0.3 --destination-port 7000 -j DROP
 ```
 
-3. Run hello world Dapr app
+4. Run hello world Dapr app
 
 ```bash
 dapr run --app-id nodeapp --app-port 3000 --dapr-http-port 3500 node app.js
