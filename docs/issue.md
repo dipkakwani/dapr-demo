@@ -1,28 +1,24 @@
 # Weak Isolation Mock DB Proposal
 
-https://github.com/microsoft/weak-isolation-mock-db
-
 Hello team,
 
-This write-up is a proposal for addition of a new state store to Dapr. Weak-Isolatation-Mock-DB can be used to systematically test application against weak behaviors of databases. In practice, real world databases rarely generate weaker behaviors which makes it very difficult for application developers to test all possible worst-case scenarios and can lead to bugs going unnoticed. Weak-Isolatation-Mock-DB with Dapr can be used by developers as a pluggable replacement for existing state store to throughly test their applications with weaker behaviors.
+This write-up is a proposal for addition of a new state store to Dapr. Weak-Isolatation-Mock-DB ([Github](https://github.com/microsoft/weak-isolation-mock-db)) can be used to systematically test application against weak behaviors of databases. In practice, real world databases rarely generate weaker behaviors which makes it very difficult for application developers to test all possible worst-case scenarios and can lead to bugs going unnoticed. Weak-Isolatation-Mock-DB with Dapr can be used by developers as a pluggable replacement for existing state store to throughly test their applications with weaker behaviors.
 
 
 
 Dapr currently supports only two consistency levels: eventual and strong consistency, based on quorum configuration.  When using eventual consistency, the store only waits for only one replica. In theory, this could lead to store returning stale data, but in practice most of the state stores perform well even with eventual consistency. 
 
-In the below experiment, we tested what it takes to break an existing Dapr application with a Dapr-supported state store.
+In the below experiment, we tested what it takes to break existing Dapr applications with a Dapr-supported state store.
 
 ### Applications
 
-#### Hello World
+#### Hello World [[Github](https://github.com/dapr/quickstarts/tree/master/hello-world)]
 
-https://github.com/dapr/quickstarts/tree/master/hello-world
+This is a simple hello world application to which we added an additional check for read-your-writes consistency. We use Cassandra as a state store and show that even with such a simple application, it is possible to violate read-your-writes consistency. See appendix for details on how to reproduce this violation.
 
-This is a simple hello world application to which we added an additional check for read-your-writes consistency. We use Cassandra as a state store and show that even with such a simple application, it is possible to violate read-your-writes. See appendix for details on how to reproduce this anomaly.
 
-#### Dapr-Store
 
-https://github.com/benc-uk/dapr-store
+#### Dapr-Store [[Github](https://github.com/benc-uk/dapr-store)]
 
 This is a shopping store application built using Dapr. As with any other shopping cart application, there are few anomalies which exist with this application. A well-known anomaly is that of reappearing of a deleted item. The figure below shows the anomaly. 
 
