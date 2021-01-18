@@ -2,19 +2,19 @@
 
 Hello team,
 
-We would like to propose the addition of a new state store that is meant for testing of dapr applications. The store implementation is called [Weak-Isolatation-Mock-DB](https://github.com/microsoft/weak-isolation-mock-db). It has been designed to test applications against _weak behaviors_ of databases, such as those arising when using _eventual consistency_ instead of _strong consistency_. Real-world databases only [rarely](http://www.news.cs.nyu.edu/~jinyang/ds-reading/facebookmeasure.pdf) exhibit weak behaviors, although they do happen, which makes it very difficult for application developers to test against worst-case scenarios. Weak-Isolatation-Mock-DB can generate these worst-case scenarios with a much higher probability. It works as follows: on each read, it computes the set of return values possible under eventual consistency, and then randomly returns a value from this set. We make an argument below showcasing why Weak-Isolatation-Mock-DB is useful. 
+We would like to propose the addition of a new state store that is meant for testing of dapr applications. The store implementation is called [Weak-Isolatation-Mock-DB](https://github.com/microsoft/weak-isolation-mock-db). It has been designed to test applications against _weak behaviors_ of databases, such as those arising when using _eventual consistency_ instead of _strong consistency_. Real-world databases only [rarely](http://www.news.cs.nyu.edu/~jinyang/ds-reading/facebookmeasure.pdf) exhibit weak behaviors, although they do happen, which makes it very difficult for application developers to test against worst-case scenarios. Weak-Isolatation-Mock-DB can generate these worst-case scenarios with a much higher probability. It works as follows: on each read, it computes the set of return values possible under eventual consistency, and then randomly returns a value from this set. We make an argument below showcasing why Weak-Isolatation-Mock-DB is useful.
 
 ### Applications
 
-#### Hello World [[Github](https://github.com/dapr/quickstarts/tree/master/hello-world)]
+#### Hello World [[Github - dapr/quickstarts](https://github.com/dapr/quickstarts/tree/master/hello-world)]
 
 Eventual consistency does not guarantee _read-your-writes_. That is, if you write a value and then immediately do a read, it need not return the value just written (even in the absence of any concurrent write).
 
-Does it happen in practice? Yes, it does. We modified the hello-world app to check for _read-your-writes_ then connected it to Cassandra with a special setup, and observed a violation of read-your-writes. See appendix for more details. 
+Does it happen in practice? Yes, it does. We modified the hello-world app (from dapr-quickstarts) to check for _read-your-writes_ then connected it to Cassandra with a special setup, and observed a violation of read-your-writes. See appendix for more details. 
 
-#### Dapr-Store [[Github](https://github.com/benc-uk/dapr-store)]
+#### Dapr-Store [[Github - benc-uk/dapr-store](https://github.com/benc-uk/dapr-store)]
 
-This is a shopping store application built using Dapr. We highlight an _anomaly_ in the application where a deleted iteam reappears in the shopping cart when using eventual consistency. Consider the case when a user is accessing their shopping cart from multiple clients, deleting an item in one session and adding the item in the second session. What can happen here in the following. When the user first looks at their cart, they see the delete having succeeded. After a refresh, reading the cart again, the deleted item comes back and there are two items in the cart this time! The figure below illustrates this example. 
+This is a shopping store application built using Dapr. We highlight an _anomaly_ in the application where a deleted iteam reappears in the shopping cart when using eventual consistency. Consider the case when a user is accessing their shopping cart from multiple clients, deleting an item in one session and adding the item in the second session. What can happen here is the following. When the user first looks at their cart, they see the delete having succeeded. After a refresh, reading the cart again, the deleted item comes back and there are two items in the cart this time! The figure below illustrates this example. 
 
 ![Shopping Cart Example](shopping_cart_example.png)
 
