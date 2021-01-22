@@ -52,7 +52,7 @@ dapr run --app-id nodeapp --app-port 3000 --dapr-http-port 3500 node app.js
 dapr run --app-id pythonapp python3 app.py
 ```
 
-How many iterations does it take to find violations?
+How many iterations does it take to find violations in shopping cart application?
 
 | Assertion\Store | **WeakIsolationMockDB** | Redis |
 | --------------- | ----------------------- | ----- |
