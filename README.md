@@ -1,6 +1,6 @@
 # DAPR DEMO
 
-This project shows usage of WeakIsolationMockDB ([Github](https://github.com/microsoft/weak-isolation-mock-db)) with dapr. The goal of the demo is to show how WeakIsolationMockDB can be used find anomalies in applications which are built using dapr.
+This project shows usage of WeakIsolationMockDB ([Github](https://github.com/microsoft/weak-isolation-mock-db)) with dapr. The goal of this demo is to show how WeakIsolationMockDB can be used to find anomalies in applications which are built using dapr.
 
 The repo contains:
 1. Applications built on top of dapr.
